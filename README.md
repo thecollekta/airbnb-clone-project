@@ -31,6 +31,9 @@ part of my learning curriculum to master modern web development through the ALX 
     - [6. Review System](#6-review-system)
     - [7. Database Optimizations](#7-database-optimizations)
       - [Key Feature Relationships](#key-feature-relationships)
+  - [API Security Overview](#api-security-overview)
+    - [Core Security Measures](#core-security-measures)
+    - [Security Audit Mechanisms](#security-audit-mechanisms)
 
 ## Team Roles
 
@@ -183,7 +186,7 @@ erDiagram
 
 - OpenAPI standard for REST endpoints
 - Django REST Framework's browseable API
-- GraphQL schema
+- GraphQL schema with Apollo Studio
 **Purposes**:
 Provides clear, interactive documentation for both REST and GraphQL APIs, enabling
 seamless frontend-backend integration and third-party developer onboarding. Ensures API
@@ -269,4 +272,85 @@ graph TD
     F -->|supports| D
     F -->|supports| E
     G[DB Optimizations] -->|enhances| All
+```
+
+## API Security Overview
+
+Robust security measures are implemented through the API layer to protect sensitive data
+and operations:
+
+### Core Security Measures
+
+1. **Authentication**
+   - **Implementation**: JSON Web Tokens (JWT) with refresh token rotation
+   - **Protocols**: OAuth 2.0 for third-party integrations
+   - **Crucial For**:
+     - Preventing unauthorized access to user accounts
+     - Securing personal information (emails, payment methods)
+     - Maintaining trust in the booking platform
+
+2. **Authorization**
+   - **Implementation**: Role-Based Access Control (RBAC)
+   - **Policies**:
+     - Hosts can only manage their own properties
+     - Guests can only modify their booking
+     - Admin-only endpoints for sensitive operations
+   - **Crucial For**:
+     - Preventing privilege escalation (e.g., guests modifying property details)
+     - Ensuring users only access their own payment history
+     - Compliance with data protection regulations (GDPR, CCPA)
+
+3. **Rate Limiting**
+    - **Implementation**: Redis-backed throttling (DRF Throttle classes)
+    - **Limits**:
+      - 100 requests/minutes for authenticated users
+      - 10 requests/minute for anonymous users
+      - Stricter limits on auth endpoints (5 requests/minute)
+    - **Crucial For**:
+      - Preventing brute-force attacks on authentication
+      - Mitigating DDoS attacks and abusive scraping
+      - Ensuring fair resource allocation during traffic spikes
+
+4. **Input Validation & Sanitization**
+   - **Implementation**:
+     - Django form validation and DRF serializers
+     - GraphQL query depth limiting
+     - SQL injection protection via ORM
+   - **Crucial For**:
+     - Preventing XSS and code injection attacks
+     - Blocking malicious payloads in user-generated content
+     - Avoiding SQL injection in DB operations
+
+5. **Payment Security**
+   - **Implementation**:
+     - PCI-DSS compliance through tokenization
+     - Never storing raw payment credentials
+     - Idempotent payment processing
+   - **Crucial For**:
+     - Protecting financial data from breaches
+     - Preventing duplicate charges
+     - Maintaining trust in financial transactions
+
+6. **Data Protection**
+   - **Implementation**:
+     - AES-256 encryption at rest for sensitive fields
+     - TLS 1.3 for all data in transit
+     - Database field-level encryption (credit cards, IDs)
+   - **Crucial For**:
+     - Compliance with financial regulations
+     - Protection against database breaches
+     - Secure handling of PII (Personally Identifiable Information)
+
+### Security Audit Mechanisms
+
+```mermaid
+graph TD
+    A[Request] --> B[Rate Limiting]
+    B --> C[Authentication]
+    C --> D[Authorization]
+    D --> E[Input Validation]
+    E --> F[Business Logic]
+    F --> G[Response]
+    H[Audit Logging] -->|tracks| A
+    I[Security Headers] -->|protects| G
 ```
