@@ -14,6 +14,14 @@ part of my learning curriculum to master modern web development through the ALX 
   - [Team Roles](#team-roles)
     - [Role Collaboration](#role-collaboration)
   - [Technology Stack](#technology-stack)
+  - [Database Design Overview](#database-design-overview)
+    - [Key Entities](#key-entities)
+      - [1. Users](#1-users)
+      - [2. Properties](#2-properties)
+      - [3. Bookings](#3-bookings)
+      - [4. Reviews](#4-reviews)
+      - [5. Payments](#5-payments)
+    - [Entity Relationship Diagram (Concept)](#entity-relationship-diagram-concept)
 
 ## Team Roles
 
@@ -51,3 +59,108 @@ This project will utilize a modern , scalable technology stack:
 |**Redis**                                    |In-memory data store for caching, session management, and message brokering.                      |
 |**Docker**                                   |Containerization for consistent environments across development and deployment.                      |
 |**CI/CD Pipelines**                          |Automated testing and deployment workflows for rapid, reliable releases.                      |
+
+## Database Design Overview
+
+The database schema is designed around the core entities with their relationships:
+
+### Key Entities
+
+#### 1. Users
+
+**Fields**:
+
+- `id` (Primary Key)
+- `email`(Unique)
+- `password_hash`
+- `first_name`
+- `last_name`
+- `user_type`
+- `created_at`
+
+**Relationships**:
+
+- One-to-Many with Properties (Host)
+- One-to-Many with Bookings (Guest)
+- One-to-Many with Reviews (Author)
+
+#### 2. Properties
+
+**Fields**:
+
+- `id` (Primary Key)
+- `title`
+- `description`
+- `price_per_night`
+- `bedrooms`
+- `location` (PostGIS geography)
+- `host_id` (Foreign Key to Users)
+
+**Relationships**:
+
+- Many-to-One with Users (Host)
+- One-to-Many with Bookings
+- One-to-Many with Reviews
+- Many-to-Many with Amenities (through PropertyAmenities)
+
+#### 3. Bookings
+
+**Fields**:
+
+- `id` (Primary Key)
+- `check_in_date`
+- `check_out_date`
+- `total_price`
+- `status` (Pending/Confirmed/Cancelled)
+- `guest_id` (Foreign Key to Users)
+- `property_id` (Foreign Key to Properties)
+
+**Relationships**:
+
+- Many-to-One with Users (Guest)
+- Many-to-One with Properties
+- One-to-One with Payments
+- One-to-One with Reviews
+
+#### 4. Reviews
+
+**Fields**:
+
+- `id` (Primary Key)
+- `rating` (1-5)
+- `comment`
+- `created_at`
+- `booking_id` (Foreign Key to Bookings)
+- `author_id` (Foreign Key to Users)
+
+**Relationships**:
+
+- Many-to-One with Bookings
+- Many-to-One with Users (Author)
+- Many-to-One with Properties (through Booking)
+
+#### 5. Payments
+
+**Fields**:
+
+- `id` (Primary Key)
+- `amount`
+- `payment_method`
+- `transaction_id`
+- `status` (Succeeded/Failed)
+- `booking_id` (Foreign Key to Bookings)
+
+**Relationships**:
+
+- One-to-One with Bookings
+
+### Entity Relationship Diagram (Concept)
+
+```mermaid
+erDiagram
+    USERS ||--o{ PROPERTIES : hosts
+    USERS ||--o{ BOOKINGS : books
+    PROPERTIES ||--o{ BOOKINGS : receives
+    BOOKINGS ||--|| PAYMENTS : has
+    BOOKINGS ||--|| REVIEWS : generates
+    PROPERTIES }o--o{ REVIEWS : contains
