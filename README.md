@@ -22,6 +22,15 @@ part of my learning curriculum to master modern web development through the ALX 
       - [4. Reviews](#4-reviews)
       - [5. Payments](#5-payments)
     - [Entity Relationship Diagram (Concept)](#entity-relationship-diagram-concept)
+  - [Feature Breakdown](#feature-breakdown)
+    - [1. API Documentation](#1-api-documentation)
+    - [2. User Authentication](#2-user-authentication)
+    - [3. Property Management](#3-property-management)
+    - [4. Booking System](#4-booking-system)
+    - [5. Payment Processing](#5-payment-processing)
+    - [6. Review System](#6-review-system)
+    - [7. Database Optimizations](#7-database-optimizations)
+      - [Key Feature Relationships](#key-feature-relationships)
 
 ## Team Roles
 
@@ -164,3 +173,100 @@ erDiagram
     BOOKINGS ||--|| PAYMENTS : has
     BOOKINGS ||--|| REVIEWS : generates
     PROPERTIES }o--o{ REVIEWS : contains
+```
+
+## Feature Breakdown
+
+### 1. API Documentation
+
+**Implementation**:
+
+- OpenAPI standard for REST endpoints
+- Django REST Framework's browseable API
+- GraphQL schema
+**Purposes**:
+Provides clear, interactive documentation for both REST and GraphQL APIs, enabling
+seamless frontend-backend integration and third-party developer onboarding. Ensures API
+consistency and discoverability throughout the project lifecycle.
+
+### 2. User Authentication
+
+**Components**:
+
+- JWT-based authentication
+- Password hashing
+- Role-based access control
+**Functionality**:
+Securely manage user registration, login, and profile management. Supports both guest
+and host roles with appropriate permissions, protecting sensitive operations like
+property modifications and payment processing.
+
+### 3. Property Management
+
+**Capabilities**:
+
+- CRUD operations for property listings
+- Geolocation search (PostGIS)
+- Availability calendar integration
+**Value**:
+Enables hosts to create and manage listings with rich metadata (amenities, photos,
+pricing rules). Provides guests with powerful search filtering, and discovery tools
+for finding accommodations.
+
+### 4. Booking System
+
+**Workflow**:  
+
+- Date conflict validation  
+- Dynamic pricing calculation  
+- Booking status lifecycle  
+**Process**:  
+Manages reservation creation, modification, and cancellation. Integrates with property calendars to prevent double-booking and calculates totals based on seasonal pricing, cleaning fees, and taxes.
+
+### 5. Payment Processing
+
+**Integration**:  
+
+- Stripe/PayPal gateway support  
+- PCI-compliant transaction handling  
+- Receipt generation  
+**Security**:  
+Processes payments asynchronously via Celery, storing only minimal transaction metadata. Implements idempotency keys to prevent duplicate charges and provides booking-specific payment histories.
+
+### 6. Review System
+
+**Features**:  
+
+- Rating system (1-5 stars)  
+- Verified guest reviews  
+- Host response functionality  
+**Trust Building**:  
+Allows guests to leave reviews only for completed stays, ensuring authentic feedback.
+Hosts can respond to reviews, creating accountability and transparency in the community.
+
+### 7. Database Optimizations
+
+**Techniques**:  
+
+- PostgreSQL query indexing  
+- Redis caching layer  
+- Connection pooling  
+**Performance**:  
+Ensures sub-second response times for frequent queries (property searches, availability checks). Reduces database load through intelligent caching and optimized index strategies.
+
+#### Key Feature Relationships
+
+```mermaid
+graph TD
+    A[User Auth] --> B[Property Management]
+    A --> C[Booking System]
+    B --> C
+    C --> D[Payment Processing]
+    C --> E[Review System]
+    F[API Docs] -->|supports| A
+    F -->|supports| B
+    F -->|supports| C
+    F -->|supports| D
+    F -->|supports| E
+    G[DB Optimizations] -->|enhances| All
+```
