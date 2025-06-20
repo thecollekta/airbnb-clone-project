@@ -8,7 +8,12 @@ part of my learning curriculum to master modern web development through the ALX 
 
 ## Table of Content
 
-- [Team Roles](#team-roles)
+- [Airbnb Clone Project](#airbnb-clone-project)
+  - [Overview](#overview)
+  - [Table of Content](#table-of-content)
+  - [Team Roles](#team-roles)
+    - [Role Collaboration](#role-collaboration)
+  - [Technology Stack](#technology-stack)
 
 ## Team Roles
 
@@ -31,3 +36,18 @@ Each member will specialize in one or more roles throughout the project lifecycl
 - DB Admin works with Backend on query optimization.
 - DevOps supports all teams with deployment automation.
 - QA works across all components for quality assurance.
+
+## Technology Stack
+
+This project will utilize a modern , scalable technology stack:
+
+|Technology                                   |Purpose in Project                      |
+|---------------------------------------------|----------------------------------------|
+|**Django**                                   |Core backend framework for building web applications and RESTful APIs.                      |
+|**Django REST Framework**                    |Toolkit for building powerful, flexible REST APIs with authentication features.                      |
+|**PostgreSQL**                               |Relational database for structured data storage with ACID compliance.                      |
+|**GraphQL**                                  |Alternative query language for efficient data fetching with client-specified needs.                      |
+|**Celery**                                   |Asynchronous task processing for background jobs( email, payments, notifications, etc.).                      |
+|**Redis**                                    |In-memory data store for caching, session management, and message brokering.                      |
+|**Docker**                                   |Containerization for consistent environments across development and deployment.                      |
+|**CI/CD Pipelines**                          |Automated testing and deployment workflows for rapid, reliable releases.                      |
