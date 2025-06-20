@@ -34,6 +34,10 @@ part of my learning curriculum to master modern web development through the ALX 
   - [API Security Overview](#api-security-overview)
     - [Core Security Measures](#core-security-measures)
     - [Security Audit Mechanisms](#security-audit-mechanisms)
+  - [CI/CD Pipeline Overview](#cicd-pipeline-overview)
+    - [Why CI/CD is Essential](#why-cicd-is-essential)
+    - [Airbnb Clone Pipeline Architecture](#airbnb-clone-pipeline-architecture)
+    - [Pipeline Stages](#pipeline-stages)
 
 ## Team Roles
 
@@ -354,3 +358,49 @@ graph TD
     H[Audit Logging] -->|tracks| A
     I[Security Headers] -->|protects| G
 ```
+
+## CI/CD Pipeline Overview
+
+Continuous Integration (CI) and Continuous Deployment (CD) are practices that automate the
+software delivery process:
+
+- **CI**: Automatically builds and tests code changes on every commit
+- **CD**: Automatically deploys validated changes to production environments
+
+### Why CI/CD is Essential
+
+1. **Quality Assurance**: Catches bugs early with automated testing
+2. **Speed**: Reduces manual processes for faster releases
+3. **Consistency**: Eliminates works on the machine problems
+4. **Risk Reduction**: Smaller, incremental changes are easier to troubleshoot
+5. **Collaboration**: Enables multiple developers to work simultaneously
+
+### Airbnb Clone Pipeline Architecture
+
+```mermaid
+graph TD
+    A[Git Push] --> B[CI Pipeline]
+    B --> C{Lint & Build}
+    C --> D[Unit Tests]
+    D --> E[Integration Tests]
+    E --> F[Security Scan]
+    F --> G[Build Docker Images]
+    G --> H[Push to Registry]
+    H --> I[CD Pipeline]
+    I --> J{Deploy to}
+    J --> K[Staging]
+    J --> L[Production]
+```
+
+### Pipeline Stages
+
+|Stage                     |Tools                  |Reason                             |
+|--------------------------|-----------------------|-----------------------------------|
+|Source Control            |GitHub                 |Trigger pipeline on push to main/release branches.                  |
+|Linting                   |Ruff, Ty, Pyrefly, ESLint, Prettier                 |Enforce code style consistency.    |
+|Build                     |Docker, uv, pip, npm   |Creates reproducible artifacts.    |
+|Testing                   |Pytest, Jest, Cypress  |Validate functionality at multiple levels.                    |
+|Security Scan             |Snyk, Bandit           |Detect vulnerabilities in code/dependencies.              |
+|Container Registry        |Docker                 |Store versioned deployment images.                    |
+|Deployment                |Kubernetes/Heroku      |Automated rollout to environments.              |
+|Monitoring                |Prometheus, Sentry     |Track performance and errors in production.                |
