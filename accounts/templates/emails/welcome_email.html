@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Airbnb Clone</title>
+    <style>
+        body {
+            font-family: 'Circular', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #222;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            max-width: 120px;
+            margin-bottom: 20px;
+        }
+
+        .content {
+            background-color: #f7f7f7;
+            padding: 30px;
+            border-radius: 12px;
+        }
+
+        h1 {
+            color: #FF5A5F;
+            font-size: 24px;
+            margin-top: 0;
+        }
+
+        .button {
+            display: inline-block;
+            background-color: #FF5A5F;
+            color: white !important;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #767676;
+            text-align: center;
+        }
+
+        .divider {
+            border-top: 1px solid #e4e4e4;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Airbnb_Logo_B%C3%A9lo.svg/2560px-Airbnb_Logo_B%C3%A9lo.svg.png"
+            alt="Airbnb Clone" class="logo" width="120">
+    </div>
+
+    <div class="content">
+        <h1>Welcome to Airbnb Clone, {{ user.first_name }}! 👋</h1>
+
+        <p>We're thrilled to have you on board. Your account has been successfully verified and you're all set to start
+            exploring amazing places to stay around the world.</p>
+
+        <p>Here's what you can do next:</p>
+        <ul>
+            <li>Complete your profile to help hosts get to know you</li>
+            <li>Browse unique homes and experiences</li>
+            <li>Save your favorite listings to a wishlist</li>
+            <li>Book your first adventure!</li>
+        </ul>
+
+        <div style="text-align: center;">
+            <a href="{{ frontend_url }}/discover" class="button">Start Exploring</a>
+        </div>
+
+        <p>If you have any questions, our support team is here to help. Just reply to this email or visit our <a
+                href="{{ frontend_url }}/help" style="color: #FF5A5F;">Help Center</a>.</p>
+
+        <p>Happy travels,<br>The Airbnb Clone Team</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="footer">
+        <p>© {% now "Y" %} Airbnb Clone. All rights reserved.</p>
+        <p>This email was sent to {{ user.email }}. If you'd rather not receive this kind of email, you can <a href="#"
+                style="color: #767676;">unsubscribe</a> or <a href="#" style="color: #767676;">manage your email
+                preferences</a>.</p>
+        <p>Airbnb Clone, 123 Travel Street, Accra, Ghana</p>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,20 @@
+[Unit]
+Description=Celery Service for Airbnb Clone
+After=network.target rabbitmq-server.service
+
+[Service]
+Type=forking
+User=www-data
+Group=www-data
+EnvironmentFile=/etc/environment
+Environment=DJANGO_SETTINGS_MODULE=airbnb_clone.settings
+WorkingDirectory=/path/to/airbnb-clone-project
+ExecStart=/bin/sh -c '${WORKING_DIR}/.venv/bin/celery -A airbnb_clone worker --loglevel=info --pidfile=${WORKING_DIR}/celery_worker.pid --logfile=${WORKING_DIR}/logs/celery_worker.log --detach'
+ExecStartPost=/bin/sh -c '${WORKING_DIR}/.venv/bin/celery -A airbnb_clone beat --pidfile=${WORKING_DIR}/celery_beat.pid --logfile=${WORKING_DIR}/logs/celery_beat.log --detach'
+ExecStop=/bin/sh -c 'pkill -f "celery worker" || true'
+ExecStopPost=/bin/sh -c 'pkill -f "celery beat" || true'
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
