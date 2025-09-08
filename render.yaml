@@ -3,8 +3,8 @@ services:
   - type: web
     name: airbnb-clone-backend
     env: python
-    # Build phase: only install dependencies and collect static files
-    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    # Build phase: only install dependencies (NO DATABASE ACCESS)
+    buildCommand: pip install -r requirements.txt
     # Runtime phase: run migrations then start server
     startCommand: python manage.py migrate --noinput && gunicorn airbnb_clone.wsgi:application --log-file - --bind 0.0.0.0:$PORT
     envVars:
@@ -12,17 +12,19 @@ services:
         value: 3.13.0
       - key: DEBUG
         value: "False"
+      - key: RENDER
+        value: "True"
+      # Use a proper secret key for production
       - key: SECRET_KEY
-        fromDatabase:
-          name: airbnb-clone-db
-          property: connectionString
-          propertyPath: password
+        generateValue: true
       - key: DJANGO_ALLOWED_HOSTS
         value: "airbnb-clone-backend.onrender.com"
       - key: DATABASE_URL
         fromDatabase:
           name: airbnb-clone-db
           property: connectionString
+      # These individual DB env vars may not be needed when using DATABASE_URL
+      # but keeping them for compatibility
       - key: DB_ENGINE
         value: "postgresql"
       - key: DB_NAME
@@ -45,16 +47,38 @@ services:
         fromDatabase:
           name: airbnb-clone-db
           property: port
+      # Redis/Celery configuration (you may need to add Redis service later)
+      - key: REDIS_URL
+        value: "redis://localhost:6379/0"
       - key: CELERY_BROKER_URL
-        value: "redis://redis:6379/0"
+        value: "redis://localhost:6379/0"
       - key: CELERY_RESULT_BACKEND
-        value: "redis://redis:6379/0"
+        value: "redis://localhost:6379/0"
+      # Email configuration
       - key: EMAIL_BACKEND
         value: "django.core.mail.backends.console.EmailBackend"
+      - key: EMAIL_HOST
+        value: "localhost"
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        value: ""
+      - key: EMAIL_HOST_PASSWORD
+        value: ""
+      - key: DEFAULT_FROM_EMAIL
+        value: "webmaster@localhost"
+      # CORS configuration
       - key: CORS_ALLOWED_ORIGINS
         value: "https://your-frontend-url.com"
+      # Frontend URLs
       - key: FRONTEND_BASE_URL
         value: "https://your-frontend-url.com"
+      - key: PASSWORD_RESET_CONFIRM_URL
+        value: "https://your-frontend-url.com/reset-password"
+      - key: EMAIL_VERIFICATION_URL
+        value: "https://your-frontend-url.com/verify-email"
 
 databases:
   - name: airbnb-clone-db

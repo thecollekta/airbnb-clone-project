@@ -63,7 +63,13 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS")
+# Determine allowed hosts based on environment
+if os.environ.get("RENDER"):
+    # Production on Render
+    ALLOWED_HOSTS = ["airbnb-clone-backend.onrender.com", "127.0.0.1", "localhost"]
+else:
+    # Local development
+    ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS")
 
 
 # Application definition
@@ -140,14 +146,18 @@ WSGI_APPLICATION = "airbnb_clone.wsgi.application"
 
 # Helper function for database detection
 def get_database_config():
-    """Configure database based on environment"""
+    """Configure database based on environment with proper fallbacks"""
     database_url = os.environ.get("DATABASE_URL")
 
     if database_url:
-        # Production/Render environment
-        return {"default": dj_database_url.parse(database_url, conn_max_age=600)}
+        # Production/Render environment - use DATABASE_URL
+        config = dj_database_url.parse(database_url, conn_max_age=600)
+        # Add SSL requirement for production PostgreSQL
+        config["OPTIONS"] = config.get("OPTIONS", {})
+        config["OPTIONS"]["sslmode"] = "require"
+        return {"default": config}
 
-    # Local development fallback
+    # Local development
     db_engine = env("DB_ENGINE")
 
     if db_engine == "sqlite3":
@@ -158,6 +168,7 @@ def get_database_config():
             }
         }
     else:
+        # Local PostgreSQL
         return {
             "default": {
                 "ENGINE": "django.db.backends.postgresql",
@@ -339,32 +350,67 @@ SPECTACULAR_SETTINGS = {
     "SORT_OPERATIONS": False,
 }
 
-# CORS
+# CORS Configuration for Development
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
 
 # Optional: allow credentials if using cookies
 # CORS_ALLOW_CREDENTIALS = True
 
-# Caching (Redis via django-redis)
-REDIS_URL = env("REDIS_URL")
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": env("REDIS_URL"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "SOCKET_CONNECT_TIMEOUT": 5,  # seconds
-            "SOCKET_TIMEOUT": 5,  # seconds
-            "CONNECTION_POOL_KWARGS": {
-                "max_connections": 20,
-                "retry_on_timeout": True,
-            },
-        },
-        "KEY_PREFIX": "airbnb_clone",
-        "TIMEOUT": 300,
-    }
-}
+# Caching Configuration
+def get_cache_config():
+    """Configure caching based on environment"""
+    redis_url = env("REDIS_URL")
+
+    if os.environ.get("RENDER"):
+        # On Render, we might not have Redis initially, so fallback to dummy cache
+        try:
+            return {
+                "default": {
+                    "BACKEND": "django_redis.cache.RedisCache",
+                    "LOCATION": redis_url,
+                    "OPTIONS": {
+                        "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                        "SOCKET_CONNECT_TIMEOUT": 5,
+                        "SOCKET_TIMEOUT": 5,
+                        "CONNECTION_POOL_KWARGS": {
+                            "max_connections": 20,
+                            "retry_on_timeout": True,
+                        },
+                    },
+                    "KEY_PREFIX": "airbnb_clone",
+                    "TIMEOUT": 300,
+                }
+            }
+        except Exception:
+            # Fallback to dummy cache if Redis is not available
+            return {
+                "default": {
+                    "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+                }
+            }
+    else:
+        # Local development
+        return {
+            "default": {
+                "BACKEND": "django_redis.cache.RedisCache",
+                "LOCATION": redis_url,
+                "OPTIONS": {
+                    "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                    "SOCKET_CONNECT_TIMEOUT": 5,
+                    "SOCKET_TIMEOUT": 5,
+                    "CONNECTION_POOL_KWARGS": {
+                        "max_connections": 20,
+                        "retry_on_timeout": True,
+                    },
+                },
+                "KEY_PREFIX": "airbnb_clone",
+                "TIMEOUT": 300,
+            }
+        }
+
+
+CACHES = get_cache_config()
 
 # Celery configuration
 CELERY_BROKER_URL = env("CELERY_BROKER_URL")
@@ -373,3 +419,26 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
+
+# Logging configuration for production debugging
+if os.environ.get("RENDER"):
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+            },
+        },
+        "root": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+        "loggers": {
+            "django.db.backends": {
+                "level": "DEBUG",
+                "handlers": ["console"],
+                "propagate": False,
+            },
+        },
+    }
