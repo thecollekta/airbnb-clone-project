@@ -360,11 +360,24 @@ CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
 # Caching Configuration
 def get_cache_config():
     """Configure caching based on environment"""
-    redis_url = env("REDIS_URL")
-
+    redis_url = env("REDIS_URL", default="")
+    
+    # Check if Redis URL is valid and not localhost in production
     if os.environ.get("RENDER"):
-        # On Render, we might not have Redis initially, so fallback to dummy cache
+        if not redis_url or "localhost" in redis_url:
+            # Use dummy cache in production if Redis is not properly configured
+            return {
+                "default": {
+                    "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+                }
+            }
+    
+    if redis_url and not redis_url.startswith("redis://localhost"):
         try:
+            # Validate Redis URL format
+            if not redis_url.startswith(('redis://', 'rediss://', 'unix://')):
+                redis_url = f"redis://{redis_url}"
+                
             return {
                 "default": {
                     "BACKEND": "django_redis.cache.RedisCache",
@@ -383,29 +396,17 @@ def get_cache_config():
                 }
             }
         except Exception:
-            # Fallback to dummy cache if Redis is not available
+            # Fallback to dummy cache if Redis configuration fails
             return {
                 "default": {
                     "BACKEND": "django.core.cache.backends.dummy.DummyCache",
                 }
             }
     else:
-        # Local development
+        # Local development without Redis or invalid configuration
         return {
             "default": {
-                "BACKEND": "django_redis.cache.RedisCache",
-                "LOCATION": redis_url,
-                "OPTIONS": {
-                    "CLIENT_CLASS": "django_redis.client.DefaultClient",
-                    "SOCKET_CONNECT_TIMEOUT": 5,
-                    "SOCKET_TIMEOUT": 5,
-                    "CONNECTION_POOL_KWARGS": {
-                        "max_connections": 20,
-                        "retry_on_timeout": True,
-                    },
-                },
-                "KEY_PREFIX": "airbnb_clone",
-                "TIMEOUT": 300,
+                "BACKEND": "django.core.cache.backends.dummy.DummyCache",
             }
         }
 
@@ -413,8 +414,14 @@ def get_cache_config():
 CACHES = get_cache_config()
 
 # Celery configuration
-CELERY_BROKER_URL = env("CELERY_BROKER_URL")
-CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
+redis_url = env("REDIS_URL", default="")
+if redis_url and not redis_url.startswith("redis://localhost"):
+    CELERY_BROKER_URL = env("CELERY_BROKER_URL")
+    CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
+else:
+    # Use eager mode (synchronous) if no Redis is available
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATION = True
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"

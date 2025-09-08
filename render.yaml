@@ -49,11 +49,20 @@ services:
           property: port
       # Redis/Celery configuration (you may need to add Redis service later)
       - key: REDIS_URL
-        value: "redis://localhost:6379/0"
+        fromService:
+          name: airbnb-clone-redis
+          type: redis
+          property: connectionString
       - key: CELERY_BROKER_URL
-        value: "redis://localhost:6379/0"
+        fromService:
+          name: airbnb-clone-redis
+          type: redis
+          property: connectionString
       - key: CELERY_RESULT_BACKEND
-        value: "redis://localhost:6379/0"
+        fromService:
+          name: airbnb-clone-redis
+          type: redis
+          property: connectionString
       # Email configuration
       - key: EMAIL_BACKEND
         value: "django.core.mail.backends.console.EmailBackend"
@@ -89,4 +98,3 @@ databases:
     databaseName: airbnb_clone
     user: airbnb_user
     plan: free
-    deleteProtection: false
