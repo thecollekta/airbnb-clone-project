@@ -79,6 +79,10 @@ services:
         value: "https://your-frontend-url.com/reset-password"
       - key: EMAIL_VERIFICATION_URL
         value: "https://your-frontend-url.com/verify-email"
+  - type: redis
+    name: airbnb-clone-redis
+    ipAllowList: [] # Only accessible from services
+    plan: free
 
 databases:
   - name: airbnb-clone-db
