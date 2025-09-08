@@ -66,7 +66,7 @@ DEBUG = env("DEBUG")
 # Determine allowed hosts based on environment
 if os.environ.get("RENDER"):
     # Production on Render
-    ALLOWED_HOSTS = ["airbnb-clone-backend.onrender.com", "127.0.0.1", "localhost"]
+    ALLOWED_HOSTS = ["airbnb-clone-backend-r0k6.onrender.com"]
 else:
     # Local development
     ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS")
