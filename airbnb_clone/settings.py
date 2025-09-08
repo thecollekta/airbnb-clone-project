@@ -20,7 +20,7 @@ import environ
 # Initialize environ
 env = environ.Env(
     # Set casting and default values
-    DEBUG=(bool, True),
+    DEBUG=(bool, "DEBUG"),
     SECRET_KEY=(str, "SECRET_KEY"),
     DJANGO_ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
     DB_ENGINE=(str, "postgresql"),  # Environment variable
@@ -29,21 +29,20 @@ env = environ.Env(
     DB_PASSWORD=(str, "DB_PASSWORD"),
     DB_HOST=(str, "DB_HOST"),
     DB_PORT=(str, "DB_PORT"),
-    # IS_DOCKER=(bool, "IS_DOCKER"),
     REDIS_URL=(str, "REDIS_URL"),
     CELERY_BROKER_URL=(str, "CELERY_BROKER_URL"),
     CELERY_RESULT_BACKEND=(str, "CELERY_RESULT_BACKEND"),
     EMAIL_BACKEND=(str, "EMAIL_BACKEND"),
     CORS_ALLOWED_ORIGINS=(list, ["CORS_ALLOWED_ORIGINS"]),
-    EMAIL_HOST=(str, "smtp.gmail.com"),
-    EMAIL_PORT=(int, 587),
-    EMAIL_USE_TLS=(bool, True),
-    EMAIL_HOST_USER=(str, ""),
-    EMAIL_HOST_PASSWORD=(str, ""),
-    DEFAULT_FROM_EMAIL=(str, "noreply@airbnbclone.com"),
-    FRONTEND_BASE_URL=(str, "http://localhost:3000"),
-    PASSWORD_RESET_CONFIRM_URL=(str, "auth/password-reset/confirm/{uid}/{token}/"),
-    EMAIL_VERIFICATION_URL=(str, "auth/verify-email/confirm/{uid}/{token}/"),
+    EMAIL_HOST=(str, "EMAIL_HOST"),
+    EMAIL_PORT=(int, "EMAIL_PORT"),
+    EMAIL_USE_TLS=(bool, "EMAIL_USE_TLS"),
+    EMAIL_HOST_USER=(str, "EMAIL_HOST_USER"),
+    EMAIL_HOST_PASSWORD=(str, "EMAIL_HOST_PASSWORD"),
+    DEFAULT_FROM_EMAIL=(str, "DEFAULT_FROM_EMAIL"),
+    FRONTEND_BASE_URL=(str, "FRONTEND_BASE_URL"),
+    PASSWORD_RESET_CONFIRM_URL=(str, "PASSWORD_RESET_CONFIRM_URL"),
+    EMAIL_VERIFICATION_URL=(str, "EMAIL_VERIFICATION_URL"),
 )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -106,6 +105,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -137,29 +137,45 @@ WSGI_APPLICATION = "airbnb_clone.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DB_ENGINE = env("DB_ENGINE")
 
-if DB_ENGINE == "sqlite3":
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": env("DB_NAME"),
-            "USER": env("DB_USER"),
-            "PASSWORD": env("DB_PASSWORD"),
-            "HOST": env("DB_HOST"),
-            "PORT": env("DB_PORT"),
-        }
-    }
+# Helper function for database detection
+def get_database_config():
+    """Configure database based on environment"""
+    database_url = os.environ.get("DATABASE_URL")
 
-# For Render deployment
-DATABASES = {"default": dj_database_url.parse(os.environ.get("DATABASE_URL"))}
+    if database_url:
+        # Production/Render environment
+        return {"default": dj_database_url.parse(database_url, conn_max_age=600)}
+
+    # Local development fallback
+    db_engine = env("DB_ENGINE")
+
+    if db_engine == "sqlite3":
+        return {
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": BASE_DIR / "db.sqlite3",
+            }
+        }
+    else:
+        return {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": env("DB_NAME"),
+                "USER": env("DB_USER"),
+                "PASSWORD": env("DB_PASSWORD"),
+                "HOST": env("DB_HOST"),
+                "PORT": env("DB_PORT"),
+                "OPTIONS": {
+                    "connect_timeout": 60,
+                },
+            }
+        }
+
+
+# Database Configuration
+DATABASES = get_database_config()
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -198,18 +214,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-]
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-# Create static directory if it doesn't exist
-os.makedirs(os.path.join(BASE_DIR, "static"), exist_ok=True)
+# Only create static directory if it doesn't exist and we're not in production
+if not os.environ.get("DATABASE_URL"):  # Local development
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, "static"),
+    ]
+    os.makedirs(os.path.join(BASE_DIR, "static"), exist_ok=True)
 
-# Media files
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+# Static files storage
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Security settings for production

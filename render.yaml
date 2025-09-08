@@ -3,8 +3,10 @@ services:
   - type: web
     name: airbnb-clone-backend
     env: python
-    buildCommand: pip install -r requirements.txt && python manage.py migrate
-    startCommand: gunicorn airbnb_clone.wsgi:application --log-file -
+    # Build phase: only install dependencies and collect static files
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    # Runtime phase: run migrations then start server
+    startCommand: python manage.py migrate --noinput && gunicorn airbnb_clone.wsgi:application --log-file - --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.0
@@ -16,7 +18,11 @@ services:
           property: connectionString
           propertyPath: password
       - key: DJANGO_ALLOWED_HOSTS
-        value: "airbnb-clone.onrender.com"
+        value: "airbnb-clone-backend.onrender.com"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: airbnb-clone-db
+          property: connectionString
       - key: DB_ENGINE
         value: "postgresql"
       - key: DB_NAME
